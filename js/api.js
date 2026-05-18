@@ -2,48 +2,47 @@ const IS_LOCAL =
     window.location.hostname === "127.0.0.1" ||
     window.location.hostname === "localhost";
 
+const BACKEND_URL = "https://server-exapmtest.onrender.com";
 const API_BASE = IS_LOCAL
     ? "http://127.0.0.1:8000/api"
-    : "https://server-exapmtest.onrender.com/api";
+    : `${BACKEND_URL}/api`;
 
-let csrfToken = "";
+const TOKEN_STORAGE_KEY = "online_tests_token";
 
-function getCookie(name) {
-    const cookies = document.cookie ? document.cookie.split("; ") : [];
-    for (const cookie of cookies) {
-        const [key, ...valueParts] = cookie.split("=");
-        if (key === name) {
-            return decodeURIComponent(valueParts.join("="));
-        }
+function getToken() {
+    return localStorage.getItem(TOKEN_STORAGE_KEY) || "";
+}
+
+function setToken(token) {
+    if (token) {
+        localStorage.setItem(TOKEN_STORAGE_KEY, token);
+        return;
     }
-    return "";
+
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+}
+
+function notifyUnauthorized() {
+    window.dispatchEvent(new CustomEvent("api:unauthorized"));
 }
 
 async function request(path, options = {}) {
-    if (!API_BASE) {
-        throw new Error("Сервер пока не подключен. Запустите backend или укажите HTTPS API адрес.");
-    }
-
     const method = options.method || "GET";
     const headers = new Headers(options.headers || {});
+    const token = getToken();
 
     if (!(options.body instanceof FormData) && options.body !== undefined) {
         headers.set("Content-Type", "application/json");
     }
 
-    if (method !== "GET") {
-        const token = csrfToken || getCookie("csrftoken");
-        if (token) {
-            headers.set("X-CSRFToken", token);
-        }
+    if (token) {
+        headers.set("Authorization", `Token ${token}`);
     }
 
     const response = await fetch(`${API_BASE}${path}`, {
         ...options,
         method,
         headers,
-        credentials: "include",
-        body: options.body instanceof FormData ? options.body : options.body,
     });
 
     let data = null;
@@ -52,28 +51,41 @@ async function request(path, options = {}) {
         data = JSON.parse(text);
     }
 
+    if (response.status === 401) {
+        setToken("");
+        notifyUnauthorized();
+    }
+
     if (!response.ok) {
         const detail = data?.detail || data?.file?.[0] || "Ошибка запроса";
         throw new Error(detail);
-    }
-
-    if (data?.csrf_token) {
-        csrfToken = data.csrf_token;
     }
 
     return data;
 }
 
 window.api = {
+    clearToken: () => setToken(""),
     me: () => request("/me/"),
-    login: (username, password) => request("/login/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-    }),
-    logout: () => request("/logout/", { method: "POST" }),
+    login: async (username, password) => {
+        const data = await request("/login/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, password }),
+        });
+
+        setToken(data.token);
+        return data;
+    },
+    logout: async () => {
+        try {
+            return await request("/logout/", { method: "POST" });
+        } finally {
+            setToken("");
+        }
+    },
     tests: () => request("/tests/"),
     test: (testId) => request(`/tests/${testId}/`),
     blocks: (testId) => request(`/tests/${testId}/blocks/`),

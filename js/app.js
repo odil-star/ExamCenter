@@ -210,6 +210,14 @@ function showBackendUnavailableScreen() {
     showOnly(els.loginSection);
 }
 
+function showLoginScreen() {
+    resetCurrentTest();
+    state.user = null;
+    state.currentTest = null;
+    renderUser();
+    showOnly(els.loginSection);
+}
+
 function renderUser() {
     if (!state.user?.is_authenticated) {
         els.userPanel.innerHTML = "";
@@ -581,7 +589,10 @@ els.loginForm.addEventListener("submit", async (event) => {
     const form = new FormData(els.loginForm);
     try {
         setLoading(true);
-        state.user = await api.login(form.get("username"), form.get("password"));
+        state.user = {
+            ...(await api.login(form.get("username"), form.get("password"))),
+            is_authenticated: true,
+        };
         renderUser();
         showMessage("Вход выполнен.", "success");
         await loadTests();
@@ -599,6 +610,10 @@ els.loginForm.addEventListener("submit", async (event) => {
 
 els.logoutButton.addEventListener("click", logoutUser);
 els.mobileLogoutButton.addEventListener("click", logoutUser);
+
+window.addEventListener("api:unauthorized", () => {
+    showLoginScreen();
+});
 
 els.refreshTests.addEventListener("click", loadTests);
 els.backToTests.addEventListener("click", () => {
