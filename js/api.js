@@ -1,4 +1,11 @@
-const API_BASE = `http://${window.location.hostname || "127.0.0.1"}:8000/api`;
+const IS_LOCAL =
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "localhost";
+
+const API_BASE = IS_LOCAL
+    ? "http://127.0.0.1:8000/api"
+    : "";
+
 let csrfToken = "";
 
 function getCookie(name) {
@@ -13,6 +20,10 @@ function getCookie(name) {
 }
 
 async function request(path, options = {}) {
+    if (!API_BASE) {
+        throw new Error("Сервер пока не подключен. Запустите backend или укажите HTTPS API адрес.");
+    }
+
     const method = options.method || "GET";
     const headers = new Headers(options.headers || {});
 

@@ -186,6 +186,30 @@ function showMessage(text, type = "error") {
     setTimeout(() => els.message.classList.add("hidden"), 3500);
 }
 
+function isBackendUnavailableError(error) {
+    return error?.message?.includes("Сервер пока не подключен");
+}
+
+function showBackendUnavailableScreen() {
+    closeMobileMenu();
+    exitTestMode();
+    els.userPanel.innerHTML = "";
+    els.logoutButton.classList.add("hidden");
+    els.mobileLogoutButton.classList.add("hidden");
+    els.loginSection.innerHTML = `
+        <div class="panel-title">
+            <span class="eyebrow">Frontend</span>
+            <h2>Frontend работает</h2>
+            <p class="muted">Backend сервер пока не подключен.</p>
+        </div>
+        <div class="message-box">
+            <p>GitHub Pages запускает только HTML, CSS и JavaScript. Django backend нужно разместить отдельно на Render, Railway или PythonAnywhere.</p>
+            <p>После публикации backend замените HTTPS API адрес в <strong>frontend/js/api.js</strong>.</p>
+        </div>
+    `;
+    showOnly(els.loginSection);
+}
+
 function renderUser() {
     if (!state.user?.is_authenticated) {
         els.userPanel.innerHTML = "";
@@ -562,6 +586,11 @@ els.loginForm.addEventListener("submit", async (event) => {
         showMessage("Вход выполнен.", "success");
         await loadTests();
     } catch (error) {
+        if (isBackendUnavailableError(error)) {
+            showBackendUnavailableScreen();
+            return;
+        }
+
         showMessage(error.message);
     } finally {
         setLoading(false);
@@ -611,6 +640,11 @@ window.addEventListener("hashchange", async () => {
             showOnly(els.loginSection);
         }
     } catch (error) {
+        if (isBackendUnavailableError(error)) {
+            showBackendUnavailableScreen();
+            return;
+        }
+
         showMessage(error.message);
         showOnly(els.loginSection);
     } finally {
