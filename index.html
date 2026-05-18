@@ -80,15 +80,30 @@
                 </div>
                 <button id="refreshTests" type="button" class="secondary">Обновить</button>
             </div>
+            <div class="leaderboard-panel">
+                <div class="leaderboard-head">
+                    <div>
+                        <span class="eyebrow">TOP 5</span>
+                        <h3>Таблица лидеров</h3>
+                    </div>
+                    <button id="refreshLeaderboard" type="button" class="secondary">Обновить</button>
+                </div>
+                <div id="leaderboardList" class="leaderboard-list">
+                    <p class="muted">Лидеры пока загружаются...</p>
+                </div>
+            </div>
             <div id="testsList" class="grid"></div>
         </section>
 
         <section id="blocksSection" class="panel hidden">
             <button id="backToTests" type="button" class="secondary">Назад к тестам</button>
-            <div class="panel-title">
-                <span class="eyebrow">Блоки теста</span>
-                <h2 id="testTitle"></h2>
-                <p id="testDescription" class="muted"></p>
+            <div class="section-head blocks-head">
+                <div class="panel-title">
+                    <span class="eyebrow">Блоки теста</span>
+                    <h2 id="testTitle"></h2>
+                    <p id="testDescription" class="muted"></p>
+                </div>
+                <button id="randomBlockButton" type="button">Случайный тест</button>
             </div>
             <div id="blocksList" class="grid"></div>
         </section>

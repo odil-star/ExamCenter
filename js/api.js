@@ -86,10 +86,23 @@ window.api = {
             setToken("");
         }
     },
+    leaderboard: () => request("/leaderboard/"),
     tests: () => request("/tests/"),
     test: (testId) => request(`/tests/${testId}/`),
     blocks: (testId) => request(`/tests/${testId}/blocks/`),
     block: (blockId) => request(`/blocks/${blockId}/`),
+    randomBlock: (testId, count = 50) => request(`/tests/${testId}/random-block/?count=${count}`),
+    checkRandomAnswer: (questionId, answerId) => request("/random-test/check-answer/", {
+        method: "POST",
+        body: JSON.stringify({
+            question_id: questionId,
+            answer_id: answerId,
+        }),
+    }),
+    submitRandomTest: (answers) => request("/random-test/submit/", {
+        method: "POST",
+        body: JSON.stringify({ answers }),
+    }),
     checkAnswer: (blockId, questionId, answerId) => request(`/blocks/${blockId}/check-answer/`, {
         method: "POST",
         body: JSON.stringify({

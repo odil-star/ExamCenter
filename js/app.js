@@ -29,10 +29,13 @@ const els = {
     testsSection: document.getElementById("testsSection"),
     testsList: document.getElementById("testsList"),
     refreshTests: document.getElementById("refreshTests"),
+    leaderboardList: document.getElementById("leaderboardList"),
+    refreshLeaderboard: document.getElementById("refreshLeaderboard"),
     blocksSection: document.getElementById("blocksSection"),
     testTitle: document.getElementById("testTitle"),
     testDescription: document.getElementById("testDescription"),
     blocksList: document.getElementById("blocksList"),
+    randomBlockButton: document.getElementById("randomBlockButton"),
     backToTests: document.getElementById("backToTests"),
     quizSection: document.getElementById("quizSection"),
     blockTitle: document.getElementById("blockTitle"),
@@ -150,6 +153,10 @@ function clearQuestionTransitionTimer() {
     }
 }
 
+function isRandomTest() {
+    return Boolean(state.currentBlock?.isRandom);
+}
+
 function resetCurrentTest() {
     exitTestMode();
     state.currentBlock = null;
@@ -240,6 +247,7 @@ async function loadTests() {
         exitTestMode();
         closeMobileMenu();
         const tests = await api.tests();
+        await loadLeaderboard();
         els.testsList.innerHTML = tests.map((test) => `
             <article class="card">
                 <h3>${escapeHtml(test.title)}</h3>
@@ -259,6 +267,55 @@ async function loadTests() {
     } finally {
         setLoading(false);
     }
+}
+
+async function loadLeaderboard() {
+    if (!els.leaderboardList) {
+        return;
+    }
+
+    try {
+        const data = await api.leaderboard();
+        renderLeaderboard(data?.results || []);
+    } catch (error) {
+        els.leaderboardList.innerHTML = `
+            <div class="leaderboard-empty">
+                <p>Не удалось загрузить таблицу лидеров.</p>
+            </div>
+        `;
+    }
+}
+
+function renderLeaderboard(results) {
+    if (!results.length) {
+        els.leaderboardList.innerHTML = `
+            <div class="leaderboard-empty">
+                <p>Пока нет завершённых тестов.</p>
+            </div>
+        `;
+        return;
+    }
+
+    els.leaderboardList.innerHTML = results.map((item) => {
+        const percent = Number(item.percent) || 0;
+        const rankClass = item.rank <= 3 ? `rank-${item.rank}` : "";
+        return `
+            <article class="leaderboard-item ${rankClass}">
+                <div class="leaderboard-rank">${item.rank}</div>
+                <div class="leaderboard-main">
+                    <div class="leaderboard-row">
+                        <strong>${escapeHtml(item.username)}</strong>
+                        <span>${percent}%</span>
+                    </div>
+                    <div class="leaderboard-score">${item.score}/${item.total} · ${escapeHtml(item.test_title)}</div>
+                    <div class="leaderboard-progress">
+                        <span style="width: ${Math.max(0, Math.min(percent, 100))}%"></span>
+                    </div>
+                    <time datetime="${escapeHtml(item.completed_at)}">${formatDate(item.completed_at)}</time>
+                </div>
+            </article>
+        `;
+    }).join("");
 }
 
 async function openTest(testId) {
@@ -306,6 +363,51 @@ async function startBlockTest(blockId) {
         answerFeedback = {};
         isSubmittingTest = false;
         testFinished = false;
+
+        els.blockTitle.textContent = block.title;
+        els.showAnswersBtn.classList.add("hidden");
+        enterTestMode();
+        renderCurrentQuestion();
+        showOnly(els.quizSection);
+    } catch (error) {
+        showMessage(error.message);
+    } finally {
+        setLoading(false);
+    }
+}
+
+async function startRandomTestFromCurrentTest() {
+    try {
+        setLoading(true);
+        clearQuestionTransitionTimer();
+        closeMobileMenu();
+
+        const testId = state.currentTest.id;
+        const block = await api.randomBlock(testId, 50);
+
+        if (!block.questions.length) {
+            showMessage("В этом тесте пока нет доступных вопросов.");
+            return;
+        }
+
+        state.currentBlock = {
+            id: block.id,
+            title: block.title,
+            isRandom: true,
+            testId: block.test_id,
+        };
+
+        currentQuestions = block.questions.map((question) => ({
+            ...question,
+            shuffledAnswers: shuffleArray(question.answers),
+        }));
+
+        currentQuestionIndex = 0;
+        userAnswers = [];
+        answerFeedback = {};
+        isSubmittingTest = false;
+        testFinished = false;
+        state.currentResult = null;
 
         els.blockTitle.textContent = block.title;
         els.showAnswersBtn.classList.add("hidden");
@@ -393,7 +495,9 @@ async function handleAnswerSelection(questionId, answerId) {
     lockCurrentAnswers(true);
 
     try {
-        const feedback = await api.checkAnswer(state.currentBlock.id, questionId, answerId);
+        const feedback = isRandomTest()
+            ? await api.checkRandomAnswer(questionId, answerId)
+            : await api.checkAnswer(state.currentBlock.id, questionId, answerId);
         answerFeedback[questionId] = feedback;
         renderCurrentQuestion();
 
@@ -457,6 +561,17 @@ async function submitCurrentTest(event) {
         isSubmittingTest = true;
         testFinished = true;
         setLoading(true);
+        if (isRandomTest()) {
+            const submitResult = await api.submitRandomTest(userAnswers);
+            renderResult({
+                ...submitResult,
+                block_title: `${state.currentTest?.title || ""} · Случайный тест`,
+            });
+            enterTestMode();
+            showOnly(els.resultSection);
+            return;
+        }
+
         const submitResult = await api.submitBlock(state.currentBlock.id, userAnswers);
         window.location.hash = `result-${submitResult.result_id}`;
         await openResultPage(submitResult.result_id);
@@ -567,6 +682,25 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
+function formatDate(value) {
+    if (!value) {
+        return "";
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return new Intl.DateTimeFormat("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    }).format(date);
+}
+
 async function logoutUser() {
     try {
         setLoading(true);
@@ -616,11 +750,18 @@ window.addEventListener("api:unauthorized", () => {
 });
 
 els.refreshTests.addEventListener("click", loadTests);
+els.refreshLeaderboard.addEventListener("click", loadLeaderboard);
+els.randomBlockButton.addEventListener("click", startRandomTestFromCurrentTest);
 els.backToTests.addEventListener("click", () => {
     exitTestMode();
     showOnly(els.testsSection);
 });
 els.backToBlocks.addEventListener("click", () => {
+    if (isRandomTest()) {
+        goHome();
+        return;
+    }
+
     resetCurrentTest();
     showOnly(els.blocksSection);
 });

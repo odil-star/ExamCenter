@@ -362,6 +362,139 @@ body.test-mode .quiz-panel {
     gap: 16px;
 }
 
+.section-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.leaderboard-panel {
+    display: grid;
+    gap: 16px;
+    margin: 22px 0;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--card) 92%, var(--surface-soft));
+    box-shadow: var(--shadow-soft);
+}
+
+.leaderboard-head,
+.leaderboard-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.leaderboard-head h3 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.leaderboard-list {
+    display: grid;
+    gap: 10px;
+}
+
+.leaderboard-item {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--card);
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.leaderboard-item:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--primary) 36%, var(--border));
+    box-shadow: var(--shadow-soft);
+}
+
+.leaderboard-rank {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--primary) 13%, var(--card));
+    color: var(--primary);
+    font-size: 20px;
+    font-weight: 950;
+}
+
+.leaderboard-item.rank-1 .leaderboard-rank {
+    background: #facc15;
+    color: #422006;
+}
+
+.leaderboard-item.rank-2 .leaderboard-rank {
+    background: #cbd5e1;
+    color: #1e293b;
+}
+
+.leaderboard-item.rank-3 .leaderboard-rank {
+    background: #d97706;
+    color: #fff7ed;
+}
+
+.leaderboard-main {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+}
+
+.leaderboard-row strong {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 18px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.leaderboard-row span {
+    color: var(--primary);
+    font-size: 20px;
+    font-weight: 950;
+}
+
+.leaderboard-score,
+.leaderboard-main time,
+.leaderboard-empty {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.leaderboard-progress {
+    height: 9px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--border) 72%, var(--card));
+}
+
+.leaderboard-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--success), var(--primary));
+}
+
+.leaderboard-empty {
+    padding: 14px;
+    border: 1px dashed var(--border);
+    border-radius: 14px;
+    text-align: center;
+}
+
+.leaderboard-empty p {
+    margin: 0;
+}
+
 .eyebrow {
     display: inline-flex;
     margin-bottom: 8px;
@@ -811,6 +944,43 @@ body.test-mode .quiz-panel {
     .section-head {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .section-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .leaderboard-panel {
+        padding: 14px;
+    }
+
+    .leaderboard-head {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .leaderboard-item {
+        grid-template-columns: 42px 1fr;
+        padding: 12px;
+    }
+
+    .leaderboard-rank {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        font-size: 18px;
+    }
+
+    .leaderboard-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .leaderboard-row strong {
+        width: 100%;
+        white-space: normal;
     }
 
     .topbar {
