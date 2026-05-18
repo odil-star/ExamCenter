@@ -45,6 +45,13 @@ async function request(path, options = {}) {
         headers,
     });
 
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Backend returned HTML instead of JSON:", text);
+        throw new Error("Backend вернул HTML вместо JSON. Проверь API endpoint.");
+    }
+
     let data = null;
     const text = await response.text();
     if (text) {
