@@ -75,6 +75,9 @@ window.api = {
     clearToken: () => setToken(""),
     me: () => request("/me/"),
     login: async (username, password) => {
+        console.log("LOGIN REQUEST");
+        console.log(username, password);
+
         const data = await request("/login/", {
             method: "POST",
             headers: {
