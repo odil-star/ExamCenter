@@ -4,7 +4,7 @@ const IS_LOCAL =
 
 const API_BASE = IS_LOCAL
     ? "http://127.0.0.1:8000/api"
-    : "";
+    : "https://server-exapmtest.onrender.com/api";
 
 let csrfToken = "";
 
