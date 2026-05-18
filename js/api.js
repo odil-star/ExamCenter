@@ -1,11 +1,4 @@
-const IS_LOCAL =
-    window.location.hostname === "127.0.0.1" ||
-    window.location.hostname === "localhost";
-
-const BACKEND_URL = "https://server-exapmtest.onrender.com";
-const API_BASE = IS_LOCAL
-    ? "http://127.0.0.1:8000/api"
-    : `${BACKEND_URL}/api`;
+const API_BASE = "https://server-exapmtest.onrender.com/api";
 
 const TOKEN_STORAGE_KEY = "online_tests_token";
 
@@ -75,9 +68,6 @@ window.api = {
     clearToken: () => setToken(""),
     me: () => request("/me/"),
     login: async (username, password) => {
-        console.log("LOGIN REQUEST");
-        console.log(username, password);
-
         const data = await request("/login/", {
             method: "POST",
             headers: {
