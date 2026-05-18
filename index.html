@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Онлайн-тесты</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="./img/favuicon.png">
+</head>
+<body>
+    <header class="topbar header">
+        <div class="brand-block">
+            <div class="brand-mark">T</div>
+            <div>
+                <h1>Онлайн-тесты</h1>
+                <p>Учебные тесты через Django API</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div id="userPanel" class="user-panel"></div>
+            <button id="themeToggle" class="theme-toggle desktop-theme-toggle" type="button" aria-label="Сменить тему">
+                <img id="themeIcon" src="img/moon.png" alt="theme">
+            </button>
+            <button id="burgerBtn" class="burger-btn" type="button" aria-label="Открыть меню">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="mobileMenu" class="mobile-menu">
+            <div class="mobile-brand">
+                <div class="brand-mark">T</div>
+                <div>
+                    <h2>Онлайн-тесты</h2>
+                    <p>Учебные тесты через Django API</p>
+                </div>
+            </div>
+            <button id="mobileThemeToggle" type="button" class="mobile-menu-btn mobile-theme-toggle">
+                <img id="mobileThemeIcon" src="img/moon.png" alt="">
+                <span>Сменить тему</span>
+            </button>
+            <button id="mobileLogoutButton" type="button" class="mobile-menu-btn mobile-logout-btn danger hidden">
+                <img src="img/logout.png" alt="">
+                <span>Выйти</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="layout">
+        <div id="loading" class="loading hidden">
+            <span class="spinner"></span>
+            <span>Загрузка...</span>
+        </div>
+
+        <section id="loginSection" class="panel auth-panel hidden">
+            <div class="panel-title">
+                <span class="eyebrow">Вход</span>
+                <h2>Добро пожаловать</h2>
+                <p class="muted">Войдите под учетной записью, которую создал администратор.</p>
+            </div>
+            <form id="loginForm" class="form">
+                <label>
+                    Логин
+                    <input type="text" name="username" autocomplete="username" required>
+                </label>
+                <label>
+                    Пароль
+                    <input type="password" name="password" autocomplete="current-password" required>
+                </label>
+                <button type="submit" class="primary-action">Войти</button>
+            </form>
+        </section>
+
+        <section id="testsSection" class="panel hidden">
+            <div class="section-head">
+                <div>
+                    <span class="eyebrow">Каталог</span>
+                    <h2>Доступные тесты</h2>
+                    <p class="muted">Выберите тест, затем откройте нужный блок вопросов.</p>
+                </div>
+                <button id="refreshTests" type="button" class="secondary">Обновить</button>
+            </div>
+            <div id="testsList" class="grid"></div>
+        </section>
+
+        <section id="blocksSection" class="panel hidden">
+            <button id="backToTests" type="button" class="secondary">Назад к тестам</button>
+            <div class="panel-title">
+                <span class="eyebrow">Блоки теста</span>
+                <h2 id="testTitle"></h2>
+                <p id="testDescription" class="muted"></p>
+            </div>
+            <div id="blocksList" class="grid"></div>
+        </section>
+
+        <section id="quizSection" class="panel quiz-panel hidden">
+            <div class="test-top">
+                <button id="backToBlocks" type="button" class="exit-test-btn">Выйти из теста</button>
+            </div>
+            <div class="panel-title compact-title">
+                <h2 id="blockTitle"></h2>
+            </div>
+            <div id="quizProgress" class="quiz-progress">
+                <div class="progress-meta">
+                    <span id="progressText">Вопрос 1 из 1</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+            </div>
+            <form id="quizForm" class="quiz-form"></form>
+        </section>
+
+        <section id="resultSection" class="panel result-panel hidden">
+            <span class="eyebrow">Готово</span>
+            <h2>Результат теста</h2>
+            <p id="resultText" class="result"></p>
+            <div id="resultPercent" class="result-percent"></div>
+            <div class="result-actions">
+                <button id="showAnswersBtn" type="button" class="secondary hidden">Мои ответы</button>
+                <button id="resultBackToBlocks" type="button">На главную</button>
+            </div>
+        </section>
+    </main>
+
+    <button id="logoutButton" type="button" class="floating-logout hidden">
+        <img src="img/logout.png" alt="logout">
+    </button>
+
+    <div id="message" class="message hidden"></div>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
