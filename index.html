@@ -13,7 +13,6 @@
             <div class="brand-mark">T</div>
             <div>
                 <h1>Онлайн-тесты</h1>
-                <p>Учебные тесты через Django API</p>
             </div>
         </div>
         <div class="header-actions">
@@ -32,7 +31,7 @@
                 <div class="brand-mark">T</div>
                 <div>
                     <h2>Онлайн-тесты</h2>
-                    <p>Учебные тесты через Django API</p>
+                    <p>проверай свои знание</p>
                 </div>
             </div>
             <button id="mobileThemeToggle" type="button" class="mobile-menu-btn mobile-theme-toggle">
@@ -68,6 +67,26 @@
                     <input type="password" name="password" autocomplete="current-password" required>
                 </label>
                 <button type="submit" class="primary-action">Войти</button>
+            </form>
+        </section>
+
+        <section id="profileSection" class="panel profile-panel hidden">
+            <button id="backFromProfile" type="button" class="secondary">Назад</button>
+            <div class="profile-hero">
+                <div id="profileAvatar" class="profile-avatar">U</div>
+                <div>
+                    <span class="eyebrow">Профиль</span>
+                    <h2 id="profileTitle">Профиль</h2>
+                    <p class="muted">Пароль можно изменить только через администратора.</p>
+                </div>
+            </div>
+            <div id="profileInfo" class="profile-info"></div>
+            <form id="profileForm" class="form profile-form">
+                <label>
+                    Никнейм
+                    <input type="text" name="nickname" maxlength="50" autocomplete="nickname">
+                </label>
+                <button type="submit">Сохранить</button>
             </form>
         </section>
 

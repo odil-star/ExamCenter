@@ -12,6 +12,7 @@ let answerFeedback = {};
 let isSubmittingTest = false;
 let testFinished = false;
 let questionTransitionTimer = null;
+let previousSectionBeforeProfile = null;
 
 const els = {
     userPanel: document.getElementById("userPanel"),
@@ -26,6 +27,12 @@ const els = {
     loading: document.getElementById("loading"),
     loginSection: document.getElementById("loginSection"),
     loginForm: document.getElementById("loginForm"),
+    profileSection: document.getElementById("profileSection"),
+    profileAvatar: document.getElementById("profileAvatar"),
+    profileTitle: document.getElementById("profileTitle"),
+    profileInfo: document.getElementById("profileInfo"),
+    profileForm: document.getElementById("profileForm"),
+    backFromProfile: document.getElementById("backFromProfile"),
     testsSection: document.getElementById("testsSection"),
     testsList: document.getElementById("testsList"),
     refreshTests: document.getElementById("refreshTests"),
@@ -179,6 +186,7 @@ function resetCurrentTest() {
 function showOnly(section) {
     [
         els.loginSection,
+        els.profileSection,
         els.testsSection,
         els.blocksSection,
         els.quizSection,
@@ -234,11 +242,45 @@ function renderUser() {
         return;
     }
 
+    const displayName = getDisplayName();
+    const avatarColor = state.user.avatar_color || "#2563eb";
     els.userPanel.innerHTML = `
-        <span class="user-name">${escapeHtml(state.user.username)}</span>
+        <button id="profileButton" type="button" class="profile-btn">
+            <span class="profile-mini-avatar" style="background: ${escapeHtml(avatarColor)}">${escapeHtml(getInitial(displayName))}</span>
+            <span class="user-name">${escapeHtml(displayName)}</span>
+        </button>
     `;
+    document.getElementById("profileButton").addEventListener("click", loadProfile);
     els.logoutButton.classList.remove("hidden");
     els.mobileLogoutButton.classList.remove("hidden");
+}
+
+function getDisplayName(user = state.user) {
+    return user?.nickname || user?.username || "";
+}
+
+function getInitial(value) {
+    return (value || "U").trim().charAt(0).toUpperCase();
+}
+
+function getVisibleSection() {
+    return [
+        els.loginSection,
+        els.testsSection,
+        els.blocksSection,
+        els.quizSection,
+        els.resultSection,
+    ].find((section) => section && !section.classList.contains("hidden"));
+}
+
+function updateUserFromProfile(profile) {
+    state.user = {
+        ...(state.user || {}),
+        is_authenticated: true,
+        username: profile.username,
+        nickname: profile.nickname,
+        avatar_color: profile.avatar_color,
+    };
 }
 
 async function loadTests() {
@@ -316,6 +358,70 @@ function renderLeaderboard(results) {
             </article>
         `;
     }).join("");
+}
+
+async function loadProfile() {
+    try {
+        setLoading(true);
+        closeMobileMenu();
+        previousSectionBeforeProfile = getVisibleSection();
+        const profile = await api.profile();
+        updateUserFromProfile(profile);
+        renderUser();
+        renderProfile(profile);
+        showOnly(els.profileSection);
+    } catch (error) {
+        showMessage(error.message);
+    } finally {
+        setLoading(false);
+    }
+}
+
+function renderProfile(profile) {
+    const displayName = profile.nickname || profile.username;
+    const leaderboardRank = profile.leaderboard_rank ? `#${profile.leaderboard_rank}` : "—";
+
+    els.profileAvatar.textContent = getInitial(displayName);
+    els.profileAvatar.style.background = profile.avatar_color || "#2563eb";
+    els.profileTitle.textContent = displayName;
+    els.profileForm.nickname.value = profile.nickname || "";
+    els.profileInfo.innerHTML = `
+        <div class="profile-identity">
+            <div>
+                <span class="muted">Username</span>
+                <strong>${escapeHtml(profile.username)}</strong>
+            </div>
+            <div>
+                <span class="muted">Email</span>
+                <strong>${escapeHtml(profile.email || "Не указан")}</strong>
+            </div>
+            <div>
+                <span class="muted">Дата регистрации</span>
+                <strong>${formatDate(profile.date_joined)}</strong>
+            </div>
+        </div>
+        <div class="profile-stats">
+            ${profileStatCard("Пройдено тестов", profile.tests_completed)}
+            ${profileStatCard("Лучший результат", `${profile.best_percent}%`)}
+            ${profileStatCard("Средний процент", `${profile.average_percent}%`)}
+            ${profileStatCard("Место в leaderboard", leaderboardRank)}
+        </div>
+    `;
+}
+
+function profileStatCard(label, value) {
+    return `
+        <article class="profile-stat-card">
+            <span>${escapeHtml(label)}</span>
+            <strong>${escapeHtml(value)}</strong>
+        </article>
+    `;
+}
+
+function closeProfile() {
+    const target = previousSectionBeforeProfile || els.testsSection;
+    previousSectionBeforeProfile = null;
+    showOnly(target);
 }
 
 async function openTest(testId) {
@@ -742,6 +848,27 @@ els.loginForm.addEventListener("submit", async (event) => {
     }
 });
 
+els.profileForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const form = new FormData(els.profileForm);
+
+    try {
+        setLoading(true);
+        const profile = await api.updateProfile({
+            nickname: form.get("nickname"),
+        });
+        updateUserFromProfile(profile);
+        renderUser();
+        renderProfile(profile);
+        await loadLeaderboard();
+        showMessage("Профиль сохранён.", "success");
+    } catch (error) {
+        showMessage(error.message);
+    } finally {
+        setLoading(false);
+    }
+});
+
 els.logoutButton.addEventListener("click", logoutUser);
 els.mobileLogoutButton.addEventListener("click", logoutUser);
 
@@ -751,6 +878,7 @@ window.addEventListener("api:unauthorized", () => {
 
 els.refreshTests.addEventListener("click", loadTests);
 els.refreshLeaderboard.addEventListener("click", loadLeaderboard);
+els.backFromProfile.addEventListener("click", closeProfile);
 els.randomBlockButton.addEventListener("click", startRandomTestFromCurrentTest);
 els.backToTests.addEventListener("click", () => {
     exitTestMode();

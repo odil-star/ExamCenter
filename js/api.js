@@ -86,6 +86,11 @@ window.api = {
             setToken("");
         }
     },
+    profile: () => request("/profile/"),
+    updateProfile: (data) => request("/profile/", {
+        method: "PATCH",
+        body: JSON.stringify(data),
+    }),
     leaderboard: () => request("/leaderboard/"),
     tests: () => request("/tests/"),
     test: (testId) => request(`/tests/${testId}/`),
