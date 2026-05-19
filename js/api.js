@@ -1,18 +1,23 @@
 const API_BASE = "https://server-exapmtest.onrender.com/api";
 
-const TOKEN_STORAGE_KEY = "online_tests_token";
+const TOKEN_STORAGE_KEY = "authToken";
+const LEGACY_TOKEN_STORAGE_KEY = "online_tests_token";
 
 function getToken() {
-    return localStorage.getItem(TOKEN_STORAGE_KEY) || "";
+    return localStorage.getItem(TOKEN_STORAGE_KEY)
+        || localStorage.getItem(LEGACY_TOKEN_STORAGE_KEY)
+        || "";
 }
 
 function setToken(token) {
     if (token) {
         localStorage.setItem(TOKEN_STORAGE_KEY, token);
+        localStorage.removeItem(LEGACY_TOKEN_STORAGE_KEY);
         return;
     }
 
     localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(LEGACY_TOKEN_STORAGE_KEY);
 }
 
 function notifyUnauthorized() {
@@ -68,6 +73,7 @@ window.api = {
     clearToken: () => setToken(""),
     me: () => request("/me/"),
     login: async (username, password) => {
+        setToken("");
         const data = await request("/login/", {
             method: "POST",
             headers: {
@@ -92,7 +98,12 @@ window.api = {
         body: JSON.stringify(data),
     }),
     leaderboard: () => request("/leaderboard/"),
+    adminStats: () => request("/admin/stats/"),
     tests: () => request("/tests/"),
+    uploadTest: (formData) => request("/tests/upload/", {
+        method: "POST",
+        body: formData,
+    }),
     test: (testId) => request(`/tests/${testId}/`),
     blocks: (testId) => request(`/tests/${testId}/blocks/`),
     block: (blockId) => request(`/blocks/${blockId}/`),

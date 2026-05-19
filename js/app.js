@@ -36,6 +36,11 @@ const els = {
     testsSection: document.getElementById("testsSection"),
     testsList: document.getElementById("testsList"),
     refreshTests: document.getElementById("refreshTests"),
+    openUploadButton: document.getElementById("openUploadButton"),
+    uploadSection: document.getElementById("uploadSection"),
+    uploadTestForm: document.getElementById("uploadTestForm"),
+    adminStatsSection: document.getElementById("adminStatsSection"),
+    adminStatsGrid: document.getElementById("adminStatsGrid"),
     leaderboardList: document.getElementById("leaderboardList"),
     refreshLeaderboard: document.getElementById("refreshLeaderboard"),
     blocksSection: document.getElementById("blocksSection"),
@@ -238,6 +243,7 @@ function renderUser() {
         els.userPanel.innerHTML = "";
         els.logoutButton.classList.add("hidden");
         els.mobileLogoutButton.classList.add("hidden");
+        renderAdminControls();
         closeMobileMenu();
         return;
     }
@@ -253,6 +259,71 @@ function renderUser() {
     document.getElementById("profileButton").addEventListener("click", loadProfile);
     els.logoutButton.classList.remove("hidden");
     els.mobileLogoutButton.classList.remove("hidden");
+    renderAdminControls();
+}
+
+function renderAdminControls() {
+    const isAdmin = Boolean(state.user?.is_staff || state.user?.is_superuser);
+    const isSuperuser = Boolean(state.user?.is_superuser);
+
+    if (els.openUploadButton) {
+        els.openUploadButton.classList.toggle("hidden", !isAdmin);
+    }
+
+    if (els.adminStatsSection && !isSuperuser) {
+        els.adminStatsSection.classList.add("hidden");
+    }
+
+    if (!els.uploadSection) {
+        return;
+    }
+
+    if (!isAdmin) {
+        els.uploadSection.classList.add("hidden");
+    }
+}
+
+function openUploadSection() {
+    if (!(state.user?.is_staff || state.user?.is_superuser)) {
+        showMessage("Нет доступа. Зайдите под admin аккаунтом.");
+        return;
+    }
+
+    els.uploadSection.classList.remove("hidden");
+}
+
+async function loadAdminStats() {
+    if (!els.adminStatsSection || !els.adminStatsGrid) {
+        return;
+    }
+
+    if (!state.user?.is_superuser) {
+        els.adminStatsSection.classList.add("hidden");
+        return;
+    }
+
+    try {
+        const stats = await api.adminStats();
+        els.adminStatsGrid.innerHTML = `
+            ${adminStatCard("Пользователей", stats.users_total)}
+            ${adminStatCard("Онлайн сейчас", stats.users_online)}
+            ${adminStatCard("Тестов", stats.tests_total)}
+            ${adminStatCard("Вопросов", stats.questions_total)}
+            ${adminStatCard("Результатов", stats.results_total)}
+        `;
+        els.adminStatsSection.classList.remove("hidden");
+    } catch (error) {
+        els.adminStatsSection.classList.add("hidden");
+    }
+}
+
+function adminStatCard(label, value) {
+    return `
+        <article class="stat-card">
+            <span>${escapeHtml(label)}</span>
+            <strong>${Number(value || 0).toLocaleString("ru-RU")}</strong>
+        </article>
+    `;
 }
 
 function getDisplayName(user = state.user) {
@@ -290,6 +361,7 @@ async function loadTests() {
         closeMobileMenu();
         const tests = await api.tests();
         await loadLeaderboard();
+        await loadAdminStats();
         els.testsList.innerHTML = tests.map((test) => `
             <article class="card">
                 <h3>${escapeHtml(test.title)}</h3>
@@ -303,6 +375,7 @@ async function loadTests() {
             button.addEventListener("click", () => openTest(button.dataset.testId));
         });
 
+        renderAdminControls();
         showOnly(els.testsSection);
     } catch (error) {
         showMessage(error.message);
@@ -869,6 +942,27 @@ els.profileForm.addEventListener("submit", async (event) => {
     }
 });
 
+els.uploadTestForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(els.uploadTestForm);
+
+    try {
+        setLoading(true);
+        const result = await api.uploadTest(formData);
+        showMessage(`Тест загружен: ${result.questions_count} вопросов`, "success");
+        els.uploadTestForm.reset();
+        els.uploadSection.classList.add("hidden");
+        await loadTests();
+    } catch (error) {
+        const message = error.message.includes("Нет доступа")
+            ? "Нет доступа. Зайдите под admin аккаунтом."
+            : error.message;
+        showMessage(message);
+    } finally {
+        setLoading(false);
+    }
+});
+
 els.logoutButton.addEventListener("click", logoutUser);
 els.mobileLogoutButton.addEventListener("click", logoutUser);
 
@@ -877,6 +971,7 @@ window.addEventListener("api:unauthorized", () => {
 });
 
 els.refreshTests.addEventListener("click", loadTests);
+els.openUploadButton.addEventListener("click", openUploadSection);
 els.refreshLeaderboard.addEventListener("click", loadLeaderboard);
 els.backFromProfile.addEventListener("click", closeProfile);
 els.randomBlockButton.addEventListener("click", startRandomTestFromCurrentTest);

@@ -45,7 +45,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
     font: inherit;
 }
 
@@ -221,7 +222,8 @@ body.dark .floating-logout {
     min-height: 48px;
 }
 
-input {
+input,
+textarea {
     width: 100%;
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -232,7 +234,13 @@ input {
     transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-input:focus {
+textarea {
+    min-height: 96px;
+    resize: vertical;
+}
+
+input:focus,
+textarea:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent);
 }
@@ -465,6 +473,107 @@ body.test-mode .quiz-panel {
 
 .profile-form {
     margin-top: 18px;
+}
+
+.upload-panel {
+    display: grid;
+    gap: 16px;
+    margin: 22px 0;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--card) 94%, var(--surface-soft));
+    box-shadow: var(--shadow-soft);
+}
+
+.upload-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.upload-head h3 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.upload-head p {
+    margin: 0;
+    text-align: right;
+}
+
+.upload-form {
+    display: grid;
+    gap: 14px;
+}
+
+.upload-form button {
+    justify-self: start;
+}
+
+.admin-stats-panel {
+    display: grid;
+    gap: 16px;
+    margin: 22px 0;
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--card) 95%, var(--surface-soft));
+    box-shadow: var(--shadow-soft);
+}
+
+.admin-stats-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.admin-stats-head h3 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.admin-stats-head p {
+    max-width: 360px;
+    margin: 0;
+    text-align: right;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.stat-card {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--card);
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--primary) 36%, var(--border));
+    box-shadow: var(--shadow-soft);
+}
+
+.stat-card span {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.stat-card strong {
+    color: var(--text);
+    font-size: 28px;
+    line-height: 1;
 }
 
 .leaderboard-panel {
@@ -1079,6 +1188,50 @@ body.test-mode .quiz-panel {
     .leaderboard-head {
         align-items: stretch;
         flex-direction: column;
+    }
+
+    .upload-panel {
+        padding: 14px;
+    }
+
+    .upload-head {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .upload-head p {
+        text-align: left;
+    }
+
+    .upload-form button {
+        width: 100%;
+    }
+
+    .admin-stats-panel {
+        padding: 14px;
+    }
+
+    .admin-stats-head {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-stats-head p {
+        max-width: none;
+        text-align: left;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        grid-template-columns: 1fr auto;
+        align-items: center;
+    }
+
+    .stat-card strong {
+        font-size: 24px;
     }
 
     .leaderboard-item {
